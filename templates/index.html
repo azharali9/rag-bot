@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+            height: 80px;
+        }
+
+        button {
+            padding: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .response-container {
+            margin-top: 20px;
+        }
+    </style>
+    <title>RAG Bot</title>
+</head>
+<body>
+    <div class="container">
+        <h1>RAG Bot</h1>
+        <div class="input-container">
+            <textarea id="user_input" placeholder="Type or click the microphone to start speaking..."></textarea>
+            <button id="startRecording">🎤 Start Recording</button>
+        </div>
+        <button id="getResponse">Get Response</button>
+        <div class="response-container">
+            <p id="response">Bot's Response Will Appear Here</p>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const startRecordingButton = document.getElementById('startRecording');
+            const userInputTextarea = document.getElementById('user_input');
+            const getResponseButton = document.getElementById('getResponse');
+            const responseParagraph = document.getElementById('response');
+    
+            let recognition;
+    
+            try {
+                recognition = new webkitSpeechRecognition();
+            } catch (e) {
+                console.error('Speech recognition not supported.');
+            }
+    
+            if (recognition) {
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                recognition.lang = 'ur-PK';
+    
+                startRecordingButton.addEventListener('click', function () {
+                    recognition.start();
+                    userInputTextarea.placeholder = 'Listening...';
+                });
+    
+                recognition.onresult = function (event) {
+                    const result = event.results[event.results.length - 1][0].transcript;
+                    userInputTextarea.value = result;
+                };
+    
+                recognition.onspeechend = function () {
+                    recognition.stop();
+                    userInputTextarea.placeholder = 'Type or click the microphone to start speaking...';
+                };
+            }
+    
+            getResponseButton.addEventListener('click', function () {
+                const user_input = userInputTextarea.value;
+                responseParagraph.innerHTML = 'Bot is thinking...';
+    
+                // Make an AJAX request to your Flask server
+                const xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        // Update the responseParagraph.innerHTML with the actual response
+                        responseParagraph.innerHTML = xhr.responseText;
+                    }
+                };
+                xhr.open('POST', '/get_response', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send('user_input=' + encodeURIComponent(user_input));
+            });
+        });
+    </script>
+</body>
+</html>

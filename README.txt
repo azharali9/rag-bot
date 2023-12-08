@@ -1,6 +1,3 @@
-Certainly! Below is a sample structure for a comprehensive README file for your RAG bot:
-
-```markdown
 # RAG Bot
 
 ## Overview
